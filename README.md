@@ -1,4 +1,5 @@
-<<<<<<< HEAD
-# carreerfit_ai
-ai기반프젝ai기반프젝
-=======
+# carreerfit\_ai
+
+ai기반프로젝트
+hi
+
