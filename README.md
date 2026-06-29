@@ -1,1 +1,2 @@
-# carreerfit_ai# carreerfit_ai_new
+# carreerfit_ai
+ai기반프젝
