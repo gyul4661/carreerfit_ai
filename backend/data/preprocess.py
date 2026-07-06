@@ -7,6 +7,7 @@
 import json
 import os
 import sqlite3
+from datetime import date
 
 import pandas as pd
 
@@ -75,7 +76,7 @@ def check_missing(df: pd.DataFrame) -> pd.DataFrame:
 
     result = pd.DataFrame({
         "결측치 수": missing,
-        "결측치 비율(%)": missing_pct
+        "결측치 비율(%)": missing_pct,
     })
 
     missing_result = result[result["결측치 수"] > 0]
@@ -167,7 +168,6 @@ def normalize_skills(skills_str: str) -> str:
         return ""
 
     skills = [s.strip() for s in skills_str.split(";")]
-
     normalized = []
 
     for skill in skills:
@@ -211,7 +211,7 @@ def save_to_sqlite(df: pd.DataFrame) -> None:
         "jobs",
         conn,
         if_exists="replace",
-        index=False
+        index=False,
     )
 
     conn.close()
@@ -282,29 +282,48 @@ def convert_to_rag_documents(df: pd.DataFrame) -> list[dict]:
     for idx, row in df.iterrows():
         job_id = idx + 1
 
+        company = str(row.get("company", ""))
+        title = str(row.get("title", ""))
+        job_type = str(row.get("job_type", ""))
+        required_skills = str(row.get("required_skills", ""))
+        preferred_skills = str(row.get("preferred_skills", ""))
+        description = str(row.get("description", ""))
+        deadline = str(row.get("deadline", ""))
+
         doc_text = (
-            f"{row.get('company', '')}에서 "
-            f"{row.get('title', '')}을 제공하고 있습니다. "
-            f"직무 유형은 {row.get('job_type', '정보 없음')}입니다. "
-            f"필수 스킬은 {row.get('required_skills', '정보 없음')}입니다. "
-            f"우대 스킬은 {row.get('preferred_skills', '정보 없음')}입니다. "
-            f"업무 내용은 {row.get('description', '정보 없음')}입니다. "
-            f"마감일은 {row.get('deadline', '정보 없음')}입니다."
+            f"{company}에서 "
+            f"{title}을 제공하고 있습니다. "
+            f"직무 유형은 {job_type or '정보 없음'}입니다. "
+            f"필수 스킬은 {required_skills or '정보 없음'}입니다. "
+            f"우대 스킬은 {preferred_skills or '정보 없음'}입니다. "
+            f"업무 내용은 {description or '정보 없음'}입니다. "
+            f"마감일은 {deadline or '정보 없음'}입니다."
         )
+
+        startup_text = f"{company} {title} {job_type} {description}"
 
         metadata = {
             "id": str(job_id),
-            "company": str(row.get("company", "")),
-            "title": str(row.get("title", "")),
-            "job_type": str(row.get("job_type", "")),
-            "deadline": str(row.get("deadline", "")),
-            "source": "jobs.csv"
+            "company": company,
+            "title": title,
+            "job_type": job_type,
+            "deadline": deadline,
+            "source": "jobs.csv",
+
+            # 새로 추가한 metadata 3개
+            "deadline_month": (
+                deadline[5:7]
+                if len(deadline) >= 7 and deadline[4] == "-"
+                else ""
+            ),
+            "is_startup": "true" if "스타트업" in startup_text else "false",
+            "first_saved_date": date.today().isoformat(),
         }
 
         documents.append({
             "text": doc_text,
             "metadata": metadata,
-            "doc_id": f"job_{job_id}"
+            "doc_id": f"job_{job_id}",
         })
 
     print(f"✅ {len(documents)}개 문서 변환 완료")

@@ -7,10 +7,7 @@
       "title": "반도체 공정 엔지니어",
       "job_type": "반도체 공정",
       "deadline": "2026-08-31",
-      "source": "jobs.csv",
-      "deadline_month": "08",
-      "is_startup": "false",
-      "first_saved_date": "2026-07-06"
+      "source": "jobs.csv"
     },
     "doc_id": "job_1"
   },
@@ -22,10 +19,7 @@
       "title": "소자 개발 및 특성 분석 인턴",
       "job_type": "반도체 소자",
       "deadline": "2026-09-15",
-      "source": "jobs.csv",
-      "deadline_month": "09",
-      "is_startup": "false",
-      "first_saved_date": "2026-07-06"
+      "source": "jobs.csv"
     },
     "doc_id": "job_2"
   },
@@ -37,10 +31,7 @@
       "title": "공정기술 엔지니어",
       "job_type": "공정기술",
       "deadline": "2026-10-01",
-      "source": "jobs.csv",
-      "deadline_month": "10",
-      "is_startup": "false",
-      "first_saved_date": "2026-07-06"
+      "source": "jobs.csv"
     },
     "doc_id": "job_3"
   },
@@ -52,10 +43,7 @@
       "title": "전력반도체 응용 개발 인턴",
       "job_type": "전력반도체",
       "deadline": "2026-10-20",
-      "source": "jobs.csv",
-      "deadline_month": "10",
-      "is_startup": "false",
-      "first_saved_date": "2026-07-06"
+      "source": "jobs.csv"
     },
     "doc_id": "job_4"
   },
@@ -67,10 +55,7 @@
       "title": "반도체 장비 공정 엔지니어",
       "job_type": "반도체 장비",
       "deadline": "2026-11-05",
-      "source": "jobs.csv",
-      "deadline_month": "11",
-      "is_startup": "false",
-      "first_saved_date": "2026-07-06"
+      "source": "jobs.csv"
     },
     "doc_id": "job_5"
   }
