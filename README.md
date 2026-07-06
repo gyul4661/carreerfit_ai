@@ -34,7 +34,7 @@ CareerFit AI는 취업,공모전 데이터를 csv로 관리하고, 전처리 과
 * [x] Gemini 2.5 Flash-Lite API 사용을 위한 환경변수 설정
 * [x] MOCK_MODE 기반 개발용 응답 구조 설정
 * [x] 3일차: 데이터 파이프라인 구축
-* [] 4일차: RAG 기반 서비스 + React UI
+* [ ] 4일차: RAG 기반 서비스 + React UI
 * [ ] 5일차: Docker + 포트폴리오 완성
 
 ## 폴더 구조
