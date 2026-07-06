@@ -18,7 +18,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 JOBS_CSV = os.path.join(BASE_DIR, "jobs.csv")
 DB_PATH = os.path.join(BASE_DIR, "careerfit.db")
 RAG_JSON = os.path.join(BASE_DIR, "rag_documents.json")
-# ===== 스킬 키워드 표준화 사전 =====
+
+
+# ===== 2. 스킬 키워드 표준화 사전 =====
 
 SKILL_NORMALIZATION = {
     "python": "Python",
@@ -38,7 +40,8 @@ SKILL_NORMALIZATION = {
     "excel": "Excel",
 }
 
-# ===== 2. CSV 읽기 =====
+
+# ===== 3. CSV 읽기 =====
 
 def load_data(filepath: str) -> pd.DataFrame:
     """
@@ -59,7 +62,7 @@ def load_data(filepath: str) -> pd.DataFrame:
     return df
 
 
-# ===== 3. 결측치 확인 =====
+# ===== 4. 결측치 확인 =====
 
 def check_missing(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -86,7 +89,7 @@ def check_missing(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# ===== 4. 결측치 처리 =====
+# ===== 5. 결측치 처리 =====
 
 def handle_missing(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -98,10 +101,8 @@ def handle_missing(df: pd.DataFrame) -> pd.DataFrame:
 
     before = len(df)
 
-    # title, required_skills가 비어 있으면 의미 있는 공고가 아니므로 제거
     df = df.dropna(subset=["title", "required_skills"])
 
-    # 나머지 텍스트 컬럼은 빈 문자열로 채움
     text_cols = [
         "company",
         "preferred_skills",
@@ -123,7 +124,7 @@ def handle_missing(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# ===== 5. 중복 제거 =====
+# ===== 6. 중복 제거 =====
 
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -143,6 +144,7 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
         print("✅ 중복 없음")
 
     df = df.drop_duplicates(subset=["company", "title"], keep="first")
+    df = df.reset_index(drop=True)
 
     after = len(df)
 
@@ -150,7 +152,9 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     print(f"제거된 중복: {before - after}행")
 
     return df
-# ===== 스킬 키워드 표준화 =====
+
+
+# ===== 7. 스킬 키워드 표준화 =====
 
 def normalize_skills(skills_str: str) -> str:
     """
@@ -192,7 +196,8 @@ def standardize_skills(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-# ===== 6. SQLite DB 저장 =====
+
+# ===== 8. SQLite DB 저장 =====
 
 def save_to_sqlite(df: pd.DataFrame) -> None:
     """
@@ -212,7 +217,9 @@ def save_to_sqlite(df: pd.DataFrame) -> None:
     conn.close()
 
     print(f"✅ DB 저장 완료: {DB_PATH}")
-# ===== SQLite 조회 테스트 =====
+
+
+# ===== 9. SQLite 조회 테스트 =====
 
 def query_sqlite(db_path: str) -> None:
     """
@@ -239,58 +246,79 @@ def query_sqlite(db_path: str) -> None:
     for row in cursor.fetchall():
         print(f"- {row[0]}: {row[1]}개")
 
-    # 3. Python이 필요한 공고 조회
-    print("\n[Python이 필요한 공고]")
+    # 3. Python이 포함된 공고 조회
+    print("\n[Python 관련 공고]")
     cursor.execute("""
-        SELECT company, title, required_skills
+        SELECT company, title, required_skills, preferred_skills
         FROM jobs
         WHERE required_skills LIKE '%Python%'
+           OR preferred_skills LIKE '%Python%'
         LIMIT 5
     """)
 
-    for row in cursor.fetchall():
-        print(f"- {row[0]} | {row[1]} | 스킬: {row[2]}")
+    rows = cursor.fetchall()
+
+    if not rows:
+        print("- Python 관련 공고 없음")
+    else:
+        for row in rows:
+            print(f"- {row[0]} | {row[1]}")
+            print(f"  필수 스킬: {row[2]}")
+            print(f"  우대 스킬: {row[3]}")
 
     conn.close()
 
-# ===== 7. RAG 문서 생성 =====
 
-def make_rag_documents(df: pd.DataFrame) -> list[dict]:
+# ===== 10. RAG 문서 변환 =====
+
+def convert_to_rag_documents(df: pd.DataFrame) -> list[dict]:
     """
-    RAG 검색용 문서 리스트를 생성합니다.
+    DataFrame의 각 행을 RAG 검색에 적합한 자연어 문서로 변환합니다.
     """
-    print("\n=== RAG 문서 생성 ===")
+    print("\n=== RAG 문서 변환 ===")
 
     documents = []
 
     for idx, row in df.iterrows():
-        content = f"""
-회사명: {row.get("company", "")}
-공고명: {row.get("title", "")}
-직무 유형: {row.get("job_type", "")}
-필수 역량: {row.get("required_skills", "")}
-우대 역량: {row.get("preferred_skills", "")}
-설명: {row.get("description", "")}
-마감일: {row.get("deadline", "")}
-""".strip()
+        job_id = idx + 1
+
+        doc_text = (
+            f"{row.get('company', '')}에서 "
+            f"{row.get('title', '')}을 제공하고 있습니다. "
+            f"직무 유형은 {row.get('job_type', '정보 없음')}입니다. "
+            f"필수 스킬은 {row.get('required_skills', '정보 없음')}입니다. "
+            f"우대 스킬은 {row.get('preferred_skills', '정보 없음')}입니다. "
+            f"업무 내용은 {row.get('description', '정보 없음')}입니다. "
+            f"마감일은 {row.get('deadline', '정보 없음')}입니다."
+        )
+
+        metadata = {
+            "id": str(job_id),
+            "company": str(row.get("company", "")),
+            "title": str(row.get("title", "")),
+            "job_type": str(row.get("job_type", "")),
+            "deadline": str(row.get("deadline", "")),
+            "source": "jobs.csv"
+        }
 
         documents.append({
-            "id": int(idx) + 1,
-            "title": row.get("title", ""),
-            "company": row.get("company", ""),
-            "content": content,
-            "metadata": {
-                "job_type": row.get("job_type", ""),
-                "deadline": row.get("deadline", "")
-            }
+            "text": doc_text,
+            "metadata": metadata,
+            "doc_id": f"job_{job_id}"
         })
 
-    print(f"✅ RAG 문서 {len(documents)}개 생성")
+    print(f"✅ {len(documents)}개 문서 변환 완료")
+
+    if documents:
+        print("\n[첫 번째 문서 미리보기]")
+        print(f"ID: {documents[0]['doc_id']}")
+        print(f"텍스트: {documents[0]['text'][:100]}...")
+        print(f"메타데이터: {documents[0]['metadata']}")
 
     return documents
 
 
-# ===== 8. RAG JSON 저장 =====
+# ===== 11. RAG JSON 저장 =====
 
 def save_rag_documents(documents: list[dict]) -> None:
     """
@@ -302,7 +330,7 @@ def save_rag_documents(documents: list[dict]) -> None:
     print(f"✅ RAG JSON 저장 완료: {RAG_JSON}")
 
 
-# ===== 9. 실행 =====
+# ===== 12. 실행 =====
 
 if __name__ == "__main__":
     # 1. 읽기
@@ -319,17 +347,20 @@ if __name__ == "__main__":
 
     # 4. 중복 제거
     df_jobs = remove_duplicates(df_jobs)
+
+    # 5. 스킬 키워드 표준화
     df_jobs = standardize_skills(df_jobs)
 
-    # 5. SQLite 저장
+    # 6. SQLite 저장
     save_to_sqlite(df_jobs)
-    # SQLite 조회 테스트
+
+    # 7. SQLite 조회 테스트
     query_sqlite(DB_PATH)
 
-    # 6. RAG 문서 생성
-    rag_documents = make_rag_documents(df_jobs)
+    # 8. RAG 문서 변환
+    rag_docs = convert_to_rag_documents(df_jobs)
 
-    # 7. RAG JSON 저장
-    save_rag_documents(rag_documents)
+    # 9. RAG JSON 저장
+    save_rag_documents(rag_docs)
 
-    print(f"\n✅ 전처리 완료: 최종 {len(df_jobs)}행")
+    print(f"\n✅ 전처리 완료: 최종 {len(df_jobs)}행, RAG 문서 {len(rag_docs)}개")
