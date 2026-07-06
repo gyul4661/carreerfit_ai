@@ -10,7 +10,7 @@ venv/
 
 # ChromaDB가 자동으로 만드는 폴더
 backend/chroma_db/
-
+backend/data/chroma_db/
 # 데이터베이스 파일
 *.db
 
