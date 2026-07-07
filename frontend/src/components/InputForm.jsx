@@ -56,7 +56,7 @@ function InputForm({ onSubmit, isLoading }) {
             type="text"
             value={skillsInput}
             onChange={(e) => setSkillsInput(e.target.value)}
-            placeholder="예: Python, SQL, 반도체소자, 전자회로"
+            placeholder="예: Python,MATLAB, C언어,LTspice, ANSYS, 3D CAD "
             className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <p className="text-xs text-slate-500 mt-1">
